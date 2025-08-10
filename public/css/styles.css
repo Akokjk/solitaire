@@ -1,0 +1,168 @@
+:root{
+  --bg: #0b0f14; /* not used anymore for main bg */
+  --panel:#0f1520;
+  --ink:#e8eef7;
+  --muted:#9bb0c3;
+  --accent:#5dd6a2;
+  --accent-2:#7aa2f7;
+  --shadow:0 10px 30px rgba(0,0,0,.35);
+  --radius:14px;
+  --gap:14px;
+  --card-w: 88px;
+  --card-h: 124px;
+  --sheet-cols: 5;     /* 5 columns across in each sheet */
+}
+
+* {
+  box-sizing: border-box;
+}
+
+html, body {
+  height: 100%;
+  margin: 0;
+  /*overflow: hidden; /* 🔹 disable scrolling */
+}
+
+/* Poker table green background */
+body {
+  background: radial-gradient(circle at 50% 30%, #1a4d2e 0%, #145423 40%, #0d3d17 100%);
+  color: var(--ink);
+  font: 16px/1.45 system-ui, -apple-system, Segoe UI, Roboto, Ubuntu, 'Helvetica Neue', Arial;
+}
+.site-header{
+  position:sticky; top:0; z-index:30; display:flex; align-items:center; justify-content:space-between;
+  padding:10px 14px; background: linear-gradient(180deg, rgba(10,16,24,.9), rgba(10,16,24,.5));
+  border-bottom:1px solid rgba(255,255,255,.06); backdrop-filter: blur(6px);
+}
+.brand{display:flex; align-items:center; gap:10px; font-weight:700}
+.logo{font-size:20px} .title{font-size:18px; letter-spacing:.6px}
+.actions{display:flex; align-items:center; gap:8px}
+.actions button{
+  background:var(--panel); color:var(--ink); border:1px solid rgba(255,255,255,.08);
+  padding:8px 12px; border-radius:10px; cursor:pointer; box-shadow:var(--shadow);
+}
+.toggle{display:flex; align-items:center; gap:6px; color:var(--muted); font-size:14px}
+
+.game-root{
+	 display: block;
+  max-width: 1300px;
+  margin: 0 auto;
+  padding: 16px;
+}
+.sidebar{display:flex; flex-direction:column; gap:var(--gap)}
+.header-stats {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.header-stats .stat {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  padding: 4px 8px;
+  background: #0d1727;
+  border-radius: 8px;
+  font-size: 14px;
+}
+
+.table{
+	background:linear-gradient(180deg,#0e1624,#0b1220); 
+	border:1px solid rgba(255,255,255,.06); 
+	border-radius:var(--radius); 
+	padding:14px; 
+	box-shadow:var(--shadow);
+	width: fit-content;
+	justify-self: anchor-center;
+}
+.row{
+  display:grid;
+  grid-template-columns: repeat(7, minmax(80px, 1fr)); /* 7 even columns everywhere */
+  gap: var(--gap);
+  min-height:110px;
+}
+.row.tableau-row {
+  max-width:var(--card-w);
+}
+
+.top-row{ 
+	margin-bottom:14px; 
+	width: min-content;
+}
+
+/* remove the old two-column span */
+.spacer{ /* previously: grid-column: 3 / 5; */ }
+
+.pile{
+  position:relative;
+  height:110px;
+  border-radius:10px;
+  background: repeating-linear-gradient(135deg, #0c1628, #0c1628 10px, #0a1322 10px, #0a1322 20px);
+  border:1px dashed rgba(255,255,255,.12);
+  overflow: hidden;              /* ✅ keep tall stacks inside the pile box */
+}
+
+/* Make top-row piles exactly card height for clean alignment */
+.pile.stock,
+.pile.waste,
+.pile.foundation { 
+	height: var(--card-h); 
+	width: var(--card-w);
+	
+}
+.pile.foundation { 
+	height: var(--card-h); 
+	width: var(--card-w);
+	
+}
+.pile.foundation.card { 
+	top: 0px;
+}
+
+.pile.tableau{
+	height:calc(70vh); 
+	min-height:420px; 
+	min-width: var(--card-w);
+	max-width: var(--card-w);
+}
+
+.card{
+  position:absolute;
+  width:var(--card-w);
+  height:var(--card-h);
+  border-radius:10px;
+  box-shadow:var(--shadow);
+  user-select:none; touch-action:none; cursor:grab;
+  background-repeat: no-repeat;
+  background-size: calc(var(--sheet-cols) * var(--card-w)) auto; /* scale sheets precisely */
+}
+
+/* Face-down (card back) shows one of the two backs in Card_Back-88x124.png */
+.card.facedown{
+  background-image: url("/graphics/Top-Down/Card_Back-88x124.png");
+  background-size: calc(2 * var(--card-w)) var(--card-h);
+  border:1px solid rgba(255,255,255,.16);
+}
+
+/* Optional: choose red or blue back by shifting the background-position */
+.card.back-blue { background-position: calc(-1 * var(--card-w)) 0; } /* right half of the back image */
+.card.back-red  { background-position: 0 0; }                       /* left half (default) */
+
+/* Face-up cards will get suit-specific background images from JS */
+.card.faceup{
+  border:1px solid rgba(255,255,255,.14);
+  color:var(--ink);
+}
+
+/* We won’t render rank/suit text when using sprites; hide if still present */
+.card.faceup .content{ display:none; }
+
+.placeholder{position:absolute; inset:0; border-radius:10px; outline:2px dashed rgba(255,255,255,.18); outline-offset:-8px}
+
+.site-footer{display:flex; align-items:center; justify-content:space-between; max-width:1300px; margin:16px auto; padding:8px 12px; color:var(--muted)}
+
+@media (max-width: 980px){
+  .game-root{grid-template-columns: 1fr}
+  .sidebar{order:2}
+  .table{order:1}
+}

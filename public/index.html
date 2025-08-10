@@ -1,0 +1,85 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Solitaire — Klondike</title>
+  <link rel="canonical" href="https://playsolitaire.xyz/">
+  <meta name="description" content="Play fast, elegant Klondike Solitaire in your browser. Ad-free with undo and hints.">
+  <link rel="icon" href="data:," />
+  <link rel="stylesheet" href="/css/styles.css" />
+	  <!-- Open Graph -->
+	<meta property="og:title" content="Play Klondike Solitaire — Fast, Ad-Free">
+	<meta property="og:description" content="Elegant Klondike Solitaire. Draw 1 or 3, undo, hints, no tracking.">
+	<meta property="og:url" content="https://playsolitaire.xyz/">
+	<meta property="og:type" content="website">
+	
+</head>
+<body>
+  <header class="site-header">
+    <div class="brand">
+      <span class="logo">♦️</span>
+      <span class="title">Klondike Solitaire</span>
+	  
+    </div>
+	  <!-- Stats in the header -->
+	  <div class="header-stats">
+		<div class="stat"><span>Time</span><strong id="timeEl">0:00</strong></div>
+		<div class="stat"><span>Moves</span><strong id="movesEl">0</strong></div>
+		<div class="stat"><span>Score</span><strong id="scoreEl">0</strong></div>
+	  </div>
+    <nav class="actions">
+      <button id="newGameBtn" title="New game (N)">New Game</button>
+      <button id="undoBtn" title="Undo (U)">Undo</button>
+      <button id="hintBtn" title="Hint (H)">Hint</button>
+      
+    </nav>
+  </header>
+
+  <main id="gameRoot" class="game-root" aria-label="Klondike Solitaire">
+  
+
+    <section class="table">
+      <div class="row top-row">
+        <div class="pile stock" id="stock" aria-label="Stock" tabindex="0"></div>
+        <div class="pile waste" id="waste" aria-label="Waste" tabindex="0"></div>
+        <div class="spacer"></div>
+        <div class="pile foundation" id="foundation-0" aria-label="Foundation ♠" data-suit="S" tabindex="0"></div>
+        <div class="pile foundation" id="foundation-1" aria-label="Foundation ♥" data-suit="H" tabindex="0"></div>
+        <div class="pile foundation" id="foundation-2" aria-label="Foundation ♦" data-suit="D" tabindex="0"></div>
+        <div class="pile foundation" id="foundation-3" aria-label="Foundation ♣" data-suit="C" tabindex="0"></div>
+      </div>
+
+      <div class="row tableau-row" id="tableauRow" aria-label="Tableau">
+        <div class="pile tableau" id="tab-0" tabindex="0"></div>
+        <div class="pile tableau" id="tab-1" tabindex="0"></div>
+        <div class="pile tableau" id="tab-2" tabindex="0"></div>
+        <div class="pile tableau" id="tab-3" tabindex="0"></div>
+        <div class="pile tableau" id="tab-4" tabindex="0"></div>
+        <div class="pile tableau" id="tab-5" tabindex="0"></div>
+        <div class="pile tableau" id="tab-6" tabindex="0"></div>
+      </div>
+    </section>
+  </main>
+
+  <footer class="site-footer">
+    <span>© <span id="yearEl"></span> Aaron Barack</span>
+  </footer>
+	<script type="application/ld+json">
+	{
+	  "@context": "https://schema.org",
+	  "@type": "Game",
+	  "name": "Klondike Solitaire",
+	  "url": "https://playsolitaire.xyz/",
+	  "applicationCategory": "Game",
+	  "operatingSystem": "Web",
+	  "genre": "Card game",
+	  "description": "A fast, elegant Klondike Solitaire you can play in your browser. Ad-free, draw 1, undo and hints.",
+	  "inLanguage": "en",
+	  "isAccessibleForFree": true
+	}
+	</script>
+
+  <script src="/js/game.js" defer></script>
+</body>
+</html>

@@ -1,0 +1,13 @@
+{
+  "name": "solitaire-express",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Minimal stylized Solitaire with Node/Express static server",
+  "scripts": {
+    "start": "node index.js",
+    "dev": "NODE_ENV=development node index.js"
+  },
+  "dependencies": {
+    "express": "^4.19.2"
+  }
+}
