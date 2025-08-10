@@ -1,0 +1,1 @@
+https://playsolitaire.xyz/
