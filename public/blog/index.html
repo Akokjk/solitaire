@@ -7,20 +7,15 @@
   <link rel="icon" href="data:," />
   <link rel="stylesheet" href="/css/styles.css" />
   <style>
-    .blog-wrap { max-width: 900px; margin: 24px auto; padding: 16px; }
-    .blog-card { background: linear-gradient(180deg, #111a2a, #0e1624);
-      border: 1px solid rgba(255,255,255,.06);
-      border-radius: 14px; padding: 14px 16px; margin: 12px 0;
-      box-shadow: var(--shadow);
-    }
-    .blog-card h2 { margin: 0 0 6px; font-size: 20px; }
-    .blog-meta { color: var(--muted); font-size: 14px; margin-bottom: 8px; }
-    .blog-card a { color: var(--ink); text-decoration: none; }
-    .blog-card a:hover { text-decoration: underline; }
-    .search { display: flex; gap: 8px; margin: 12px 0; }
-    .search input { flex: 1; padding: 10px; border-radius: 10px;
-      border: 1px solid rgba(255,255,255,.1); background: #0d1727; color: var(--ink);
-    }
+    .blog-wrap{max-width:900px;margin:24px auto;padding:16px}
+    .blog-card{background:linear-gradient(180deg,#111a2a,#0e1624);border:1px solid rgba(255,255,255,.06);
+      border-radius:14px;padding:14px 16px;margin:12px 0;box-shadow:var(--shadow)}
+    .blog-card h2{margin:0 0 6px;font-size:20px}
+    .blog-meta{color:var(--muted);font-size:14px;margin-bottom:8px}
+    .blog-card a{color:var(--ink);text-decoration:none}
+    .blog-card a:hover{text-decoration:underline}
+    .search{display:flex;gap:8px;margin:12px 0}
+    .search input{flex:1;padding:10px;border-radius:10px;border:1px solid rgba(255,255,255,.1);background:#0d1727;color:var(--ink)}
   </style>
 </head>
 <body>
@@ -46,22 +41,49 @@
   </footer>
 
   <script>
+    const slug = location.pathname.split('/').pop().replace('.html','');
+
+// Track view and get stats
+    fetch(`/api/view/${slug}`, { method: 'POST' })
+      .then(res => res.json())
+      .then(data => {
+        document.getElementById('viewCount').textContent = data.views;
+        document.getElementById('uniqueVisitors').textContent = data.totalUniqueVisitors;
+      });
     document.getElementById('yearEl').textContent = new Date().getFullYear();
 
     const listEl = document.getElementById('list');
     const searchEl = document.getElementById('searchInput');
     let posts = [];
-    let stats = {};
 
-    Promise.all([
-      fetch('/blog/posts.json').then(r => r.json()),
-      fetch('/data/stats').then(r => r.json())
-    ])
-    .then(([postsData, statsData]) => {
-      posts = postsData.posts.sort((a, b) => new Date(b.date) - new Date(a.date));
-      stats = statsData.posts || {};
-      render(posts);
+    fetch('/blog/posts.json')
+      .then(r => r.json())
+      .then(json => {
+        posts = json.posts.sort((a,b)=> new Date(b.date) - new Date(a.date));
+        render(posts);
+      });
+
+    function render(items){
+      listEl.innerHTML = items.map(p => `
+        <article class="blog-card">
+          <h2><a href="/blogs/${p.slug}.html">${escapeHtml(p.title)}</a></h2>
+          <div class="blog-meta">${new Date(p.date).toLocaleDateString()} • ${p.readingTime || '~3 min'}</div>
+          <p>${escapeHtml(p.summary || '')}</p>
+          <a class="btn" href="/blogs/${p.slug}.html">Read →</a>
+        </article>
+      `).join('');
+    }
+
+    searchEl.addEventListener('input', e => {
+      const q = e.target.value.toLowerCase();
+      render(posts.filter(p =>
+        p.title.toLowerCase().includes(q) ||
+        (p.summary||'').toLowerCase().includes(q) ||
+        (p.tags||[]).join(' ').toLowerCase().includes(q)
+      ));
     });
 
-    function render(items) {
-      lis
+    function escapeHtml(s=''){return s.replace(/[&<>"']/g, m => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m]))}
+  </script>
+</body>
+</html>

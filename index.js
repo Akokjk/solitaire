@@ -1,98 +1,104 @@
 const express = require('express');
 const path = require('path');
-const fs = require('fs');
+const fs = require('fs');               // 🔸
+const crypto = require('crypto');       // 🔸
 const app = express();
 const PORT = process.env.PORT || 3000;
 
-app.use(express.json());
+// 🔸 Parse JSON bodies
+app.use(express.json({ limit: '100kb' }));
+app.set('trust proxy', 1);
 
-const DATA_DIR = path.join(__dirname, 'data');
-const STATS_FILE = path.join(DATA_DIR, 'stats.json');
-
-// Ensure data folder & file exist
-if (!fs.existsSync(DATA_DIR)) {
-  fs.mkdirSync(DATA_DIR);
+// 🔸 Simple in-memory rate limit (per IP)
+const ipHits = new Map();
+function rateLimit(windowMs = 10_000, max = 6) {
+  return (req, res, next) => {
+    const ip = req.ip || req.headers['x-forwarded-for'] || req.connection.remoteAddress || 'unknown';
+    const now = Date.now();
+    const list = (ipHits.get(ip) || []).filter(t => now - t < windowMs);
+    list.push(now);
+    ipHits.set(ip, list);
+    if (list.length > max) return res.status(429).json({ ok:false, error: 'Too many requests. Please slow down.' });
+    next();
+  };
 }
-if (!fs.existsSync(STATS_FILE)) {
-  fs.writeFileSync(STATS_FILE, JSON.stringify({ posts: {}, uniqueVisitors: [] }, null, 2));
-}
 
-function readStats() {
+// 🔸 Load/save helpers
+const DATA_PATH = path.join(__dirname, 'data', 'comments.json');
+function readStore() {
   try {
-    return JSON.parse(fs.readFileSync(STATS_FILE, 'utf8'));
+    const raw = fs.readFileSync(DATA_PATH, 'utf-8');
+    return JSON.parse(raw);
   } catch {
-    return { posts: {}, uniqueVisitors: [] };
+    return { comments:{}, reactions:{} };
   }
 }
-function saveStats(stats) {
-  fs.writeFileSync(STATS_FILE, JSON.stringify(stats, null, 2));
+function writeStore(store) {
+  fs.writeFileSync(DATA_PATH, JSON.stringify(store, null, 2));
+}
+function escapeText(s = '') {
+  return s.replace(/[&<>"']/g, m => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m]));
+}
+function normalizeSlug(slug='') {
+  // Accept either "welcome" or "/blogs/welcome.html"
+  if (slug.endsWith('.html')) slug = slug.replace(/\.html$/, '');
+  slug = slug.replace(/^\/+/, '').replace(/^blogs\//,'');
+  return slug || 'post';
 }
 
-function getIP(req) {
-  let ip = req.headers['x-forwarded-for']?.split(',')[0] || req.socket.remoteAddress || '';
-  ip = ip.replace('::ffff:', ''); // Normalize IPv6-mapped IPv4
-  return ip.trim();
-}
+// 🔸 Comments API
+app.get('/api/comments/:slug', (req, res) => {
+  const slug = normalizeSlug(req.params.slug);
+  const store = readStore();
+  res.json({ ok:true, comments: store.comments[slug] || [] });
+});
 
-// Middleware to count global unique visitors
-app.use((req, res, next) => {
-  const stats = readStats();
-  const ip = getIP(req);
-  if (ip && !stats.uniqueVisitors.includes(ip)) {
-    stats.uniqueVisitors.push(ip);
-    saveStats(stats);
+app.post('/api/comments/:slug', rateLimit(), (req, res) => {
+  const slug = normalizeSlug(req.params.slug);
+  let { name, message, honeypot } = req.body || {};
+  // Basic validation + spam guard (honeypot field must be empty)
+  if (typeof honeypot === 'string' && honeypot.trim() !== '') {
+    return res.status(200).json({ ok:true, comments: [] }); // silently ignore
   }
-  next();
+  name = (name || '').trim().slice(0, 40);
+  message = (message || '').trim().slice(0, 1000);
+  if (!name || !message) return res.status(400).json({ ok:false, error: 'Name and message are required.' });
+
+  const store = readStore();
+  const list = store.comments[slug] || [];
+  const id = crypto.randomUUID();
+  const createdAt = new Date().toISOString();
+
+  // Store escaped text to be safe
+  list.push({ id, name: escapeText(name), message: escapeText(message), createdAt });
+  store.comments[slug] = list;
+  writeStore(store);
+  res.json({ ok:true, comment: { id, name, message, createdAt } });
 });
 
-// Endpoint: increment post view & return updated counts
-app.post('/api/view/:slug', (req, res) => {
-  const stats = readStats();
-  const ip = getIP(req);
-  const slug = req.params.slug;
-
-  if (!stats.posts[slug]) {
-    stats.posts[slug] = { views: 0, uniqueIPs: [] };
+// 🔸 Reactions API (👍 ❤️ 🎉, etc.)
+const ALLOWED_REACTIONS = ['like', 'love', 'wow'];
+app.get('/api/reactions/:slug', (req, res) => {
+  const slug = normalizeSlug(req.params.slug);
+  const store = readStore();
+  const counts = store.reactions[slug] || {};
+  res.json({ ok:true, counts });
+});
+app.post('/api/reactions/:slug', rateLimit(), (req, res) => {
+  const slug = normalizeSlug(req.params.slug);
+  const { type } = req.body || {};
+  if (!ALLOWED_REACTIONS.includes(type)) {
+    return res.status(400).json({ ok:false, error: 'Invalid reaction type.' });
   }
-
-  stats.posts[slug].views++;
-  if (ip && !stats.posts[slug].uniqueIPs.includes(ip)) {
-    stats.posts[slug].uniqueIPs.push(ip);
-  }
-
-  saveStats(stats);
-
-  res.json({
-    views: stats.posts[slug].views,
-    uniqueViews: stats.posts[slug].uniqueIPs.length,
-    totalUniqueVisitors: stats.uniqueVisitors.length
-  });
+  const store = readStore();
+  const entry = store.reactions[slug] || {};
+  entry[type] = (entry[type] || 0) + 1;
+  store.reactions[slug] = entry;
+  writeStore(store);
+  res.json({ ok:true, counts: entry });
 });
 
-// Endpoint: get stats for a specific post
-app.get('/api/stats/:slug', (req, res) => {
-  const stats = readStats();
-  const slug = req.params.slug;
-  const postStats = stats.posts[slug] || { views: 0, uniqueIPs: [] };
-
-  res.json({
-    views: postStats.views,
-    uniqueViews: postStats.uniqueIPs.length,
-    totalUniqueVisitors: stats.uniqueVisitors.length
-  });
-});
-
-// Endpoint: get stats for all posts
-app.get('/api/stats', (req, res) => {
-  const stats = readStats();
-  // Always return consistent keys
-  res.json({
-    posts: stats.posts || {},
-    uniqueVisitors: stats.uniqueVisitors || []
-  });
-});
-
-// Serve static files
+// Static assets
 app.use(
   express.static(path.join(__dirname, 'public'), {
     maxAge: process.env.NODE_ENV === 'production' ? '1d' : 0,
