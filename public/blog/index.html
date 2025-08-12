@@ -1,0 +1,67 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Solitaire — Blog</title>
+  <link rel="icon" href="data:," />
+  <link rel="stylesheet" href="/css/styles.css" />
+  <style>
+    .blog-wrap { max-width: 900px; margin: 24px auto; padding: 16px; }
+    .blog-card { background: linear-gradient(180deg, #111a2a, #0e1624);
+      border: 1px solid rgba(255,255,255,.06);
+      border-radius: 14px; padding: 14px 16px; margin: 12px 0;
+      box-shadow: var(--shadow);
+    }
+    .blog-card h2 { margin: 0 0 6px; font-size: 20px; }
+    .blog-meta { color: var(--muted); font-size: 14px; margin-bottom: 8px; }
+    .blog-card a { color: var(--ink); text-decoration: none; }
+    .blog-card a:hover { text-decoration: underline; }
+    .search { display: flex; gap: 8px; margin: 12px 0; }
+    .search input { flex: 1; padding: 10px; border-radius: 10px;
+      border: 1px solid rgba(255,255,255,.1); background: #0d1727; color: var(--ink);
+    }
+  </style>
+</head>
+<body>
+  <header class="site-header">
+    <div class="brand">
+      <span class="logo">♦️</span>
+      <span class="title">Solitaire Blog</span>
+    </div>
+    <nav class="actions">
+      <a class="btn" href="/">Back to Game</a>
+    </nav>
+  </header>
+
+  <main class="blog-wrap">
+    <div class="search">
+      <input id="searchInput" type="search" placeholder="Search posts…" />
+    </div>
+    <div id="list"></div>
+  </main>
+
+  <footer class="site-footer">
+    <span>© <span id="yearEl"></span> Solitaire</span>
+  </footer>
+
+  <script>
+    document.getElementById('yearEl').textContent = new Date().getFullYear();
+
+    const listEl = document.getElementById('list');
+    const searchEl = document.getElementById('searchInput');
+    let posts = [];
+    let stats = {};
+
+    Promise.all([
+      fetch('/blog/posts.json').then(r => r.json()),
+      fetch('/data/stats').then(r => r.json())
+    ])
+    .then(([postsData, statsData]) => {
+      posts = postsData.posts.sort((a, b) => new Date(b.date) - new Date(a.date));
+      stats = statsData.posts || {};
+      render(posts);
+    });
+
+    function render(items) {
+      lis

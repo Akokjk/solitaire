@@ -1,0 +1,12 @@
+{
+  "posts": [
+    {
+      "slug": "first-post",
+      "title": "How I Built My Solitaire Website",
+      "date": "2025-08-12",
+      "summary": "I made a Solitaire site in just a couple days for about $30 and shared my process.",
+      "readingTime": "~4 min",
+      "tags": ["solitaire", "development", "seo"]
+    }
+  ]
+}

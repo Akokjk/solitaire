@@ -1,0 +1,119 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Solitaire Dev: How and Why</title>
+  <link rel="stylesheet" href="/css/styles.css" />
+  <link rel="stylesheet" href="blog.css" />
+</head>
+<body>
+  <header class="site-header">
+    <div class="brand">
+      <span class="logo">♦️</span>
+      <span class="title">PlaySolitaire.XYZ</span>
+    </div>
+    <nav class="actions">
+      <a href="/" class="back-link">← Back to Game</a>
+    </nav>
+  </header>
+
+  <main class="blog-container">
+    <h1 class="blog-title">Creating Solitaire Clone and launching it.</h1>
+    <div class="blog-meta">Posted on August 12, 2025 by Aaron Barack</div>
+    <div class="post-stats">
+    Views: <span id="viewCount">0</span>
+    </div>
+    
+    <button class="like-btn" id="likeBtn">👍 Like (<span id="likeCount">0</span>)</button>
+    
+    <article class="blog-container">
+  <h1 class="blog-title">How I Built My Solitaire Website in Just a Couple Days (for About $30)</h1>
+
+  <p>So, I’ve always liked the idea of making my own game website, and a few days ago I decided — why not? I went with Solitaire, because it’s simple, fun, and people actually search for it a <em>lot</em>.</p>
+
+  <h2>Step 1: Let ChatGPT-5 do the heavy lifting</h2>
+  <p>I started by asking ChatGPT-5 to build the basic game for me. It spit out the HTML, CSS, and JavaScript for a working Solitaire game in no time. The cool part? It even handled the main game logic so I didn’t have to code every single thing from scratch.</p>
+
+  <h2>Step 2: Polish, tweak, and debug</h2>
+  <p>Once I had something playable, I jumped in to clean it up — adjusting colors, fixing layouts, and making it look the way I wanted. Whenever I hit a bug, I just fed the problem back to ChatGPT, got a fix, and kept moving.</p>
+
+  <h2>Step 3: Time to go live</h2>
+  <p>After a few rounds of tweaks, the game was running smoothly. I grabbed a domain name from GoDaddy for just <strong>$2</strong> (first year) — not bad for locking down a name I liked.</p>
+
+  <h2>Step 4: Hosting on DigitalOcean</h2>
+  <p>To get it online, I followed <a href="https://hayksimonyan.substack.com/p/deploying-nodejs-app-to-digitalocean-419" target="_blank" rel="noopener">this tutorial</a> to set up Node.js hosting on DigitalOcean with HTTPS. It was way easier than I thought. In one day, the site was live on its own secure server.</p>
+
+  <h2>Step 5: Adding a blog in one night</h2>
+  <p>Once it was live, I figured, why not add a blog? That way I can post updates, tips, or just talk about the process. It only took one night to build a comment system and reactions. If you know your way around code, it’s a quick win.</p>
+
+  <h2>Why Solitaire?</h2>
+  <p>Well, here’s the thing — some super simple Solitaire sites make <em>crazy</em> money. If you’ve never seen it, check out <a href="https://www.solitr.com" target="_blank" rel="noopener">Solitr.com</a>. According to <a href="https://www.worthofweb.com/website-value/https://www.solitr.com/" target="_blank" rel="noopener">WorthOfWeb</a>, it’s worth over $2 million and might be pulling in around $1,000 a day from basic ads. And that’s for a game as simple as Solitaire.</p>
+
+  <h2>The big goal now: SEO</h2>
+  <p>Getting traffic is the real game here. My plan is to learn how to get the site ranked high on Google so people searching “play solitaire” actually find me. First page of Google is the dream.</p>
+
+  <h2>What’s next</h2>
+  <p>I’m going to keep adding features, make more simple games, and maybe even invent some new ones. For now, I’m keeping the site <strong>ad-free</strong> so it’s just about playing and having fun.</p>
+
+  <h2>Total cost so far</h2>
+  <p>Between my ChatGPT subscription, DigitalOcean hosting, and the domain name, I’ve spent about <strong>$30</strong>. Not bad for having a fully working game site that’s ready for people to play.</p>
+</article>
+    
+    <section class="comments">
+      <h2>Comments</h2>
+      <div id="commentList"></div>
+      
+      <form id="commentForm" class="comment-form">
+        <input type="text" id="nameInput" placeholder="Your name" required />
+        <textarea id="commentInput" placeholder="Your comment" required></textarea>
+        <button type="submit" class="submit-comment">Post Comment</button>
+      </form>
+    </section>
+  </main>
+
+  <script>
+    // --- Likes ---
+    const likeBtn = document.getElementById('likeBtn');
+    const likeCountEl = document.getElementById('likeCount');
+    let likes = parseInt(localStorage.getItem('likes-example-post') || '0', 10);
+    likeCountEl.textContent = likes;
+
+    likeBtn.addEventListener('click', () => {
+      likes++;
+      localStorage.setItem('likes-example-post', likes);
+      likeCountEl.textContent = likes;
+    });
+
+    // --- Comments ---
+    const commentForm = document.getElementById('commentForm');
+    const commentList = document.getElementById('commentList');
+    let comments = JSON.parse(localStorage.getItem('comments-example-post') || '[]');
+
+    function renderComments() {
+      commentList.innerHTML = '';
+      comments.forEach(c => {
+        const div = document.createElement('div');
+        div.className = 'comment';
+        div.innerHTML = `<strong>${c.name}</strong><br>${c.text}`;
+        commentList.appendChild(div);
+      });
+    }
+    renderComments();
+
+    commentForm.addEventListener('submit', e => {
+      e.preventDefault();
+      const name = document.getElementById('nameInput').value.trim();
+      const text = document.getElementById('commentInput').value.trim();
+      if (!name || !text) return;
+      comments.push({ name, text });
+      localStorage.setItem('comments-example-post', JSON.stringify(comments));
+      renderComments();
+      commentForm.reset();
+    });
+  </script>
+</body>
+<footer class="site-footer">
+  Total Unique Visitors: <span id="uniqueVisitors">0</span>
+</footer>
+</html>

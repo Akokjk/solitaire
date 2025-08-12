@@ -41,6 +41,16 @@ body {
   background:var(--panel); color:var(--ink); border:1px solid rgba(255,255,255,.08);
   padding:8px 12px; border-radius:10px; cursor:pointer; box-shadow:var(--shadow);
 }
+.actions .btn {
+  display:inline-block;
+  background:var(--panel);
+  color:var(--ink);
+  border:1px solid rgba(255,255,255,.08);
+  padding:8px 12px;
+  border-radius:10px;
+  text-decoration:none;
+  box-shadow:var(--shadow);
+}
 .toggle{display:flex; align-items:center; gap:6px; color:var(--muted); font-size:14px}
 
 .game-root{

@@ -1,0 +1,13 @@
+{
+  "posts": {
+    "first-post": {
+      "views": 2,
+      "uniqueIPs": [
+        "::1"
+      ]
+    }
+  },
+  "uniqueVisitors": [
+    "::1"
+  ]
+}
