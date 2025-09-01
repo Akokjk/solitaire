@@ -21,14 +21,23 @@
   let timerId = null, seconds = 0, moves = 0, score = 0;
   let history = [];
 
-// ---- Sprite sheet config ----
-const CARD_W = 88, CARD_H = 124, COLS = 5; // 5 columns x 3 rows
+// ---- Responsive sprite sheet config ----
+function getCardDimensions() {
+  const style = getComputedStyle(document.documentElement);
+  const cardW = parseInt(style.getPropertyValue('--card-w'));
+  const cardH = parseInt(style.getPropertyValue('--card-h'));
+  const gap = parseInt(style.getPropertyValue('--gap'));
+  return { cardW, cardH, gap };
+}
+
+const COLS = 5; // 5 columns x 3 rows
 const SHEETS = {
   S: "/graphics/Top-Down/Spades-88x124.png",
   H: "/graphics/Top-Down/Hearts-88x124.png",
   D: "/graphics/Top-Down/Diamonds-88x124.png",
   C: "/graphics/Top-Down/Clubs-88x124.png"
 };
+
 (function preload(){
   const urls = Object.values(SHEETS).concat("/graphics/Top-Down/Card_Back-88x124.png");
   urls.forEach(u => { const i = new Image(); i.src = u; });
@@ -36,13 +45,12 @@ const SHEETS = {
 
 // 1..13 -> background-position within a 5x3 grid
 function spritePosForRank(rank){
+  const { cardW, cardH } = getCardDimensions();
   const index = rank - 1;            // 0..12
   const col = index % COLS;          // 0..4
   const row = Math.floor(index / COLS); // 0..2
-  return `-${col * CARD_W}px -${row * CARD_H}px`;
+  return `-${col * cardW}px -${row * cardH}px`;
 }
-
-
 
   function newDeck(){
     const deck = [];
@@ -82,12 +90,13 @@ function spritePosForRank(rank){
   function undo(){ if(!history.length) return; state=JSON.parse(history.pop()); moves=Math.max(0,moves-1); renderAll(); }
 
  function cardEl(card){
+  const { cardW, cardH } = getCardDimensions();
   const div = document.createElement("div");
   div.className = `card ${card.faceUp ? "faceup" : "facedown"} ${card.color}`;
 
-  // Size safety (if CSS variables ever change)
-  div.style.width = CARD_W + "px";
-  div.style.height = CARD_H + "px";
+  // Use CSS variables for responsive sizing
+  div.style.width = `var(--card-w)`;
+  div.style.height = `var(--card-h)`;
 
   // Data for interactions
   div.dataset.id = card.id;
@@ -99,12 +108,8 @@ function spritePosForRank(rank){
     // Use suit sprite sheet and position to show the correct rank
     div.style.backgroundImage = `url("${SHEETS[card.suit]}")`;
     div.style.backgroundPosition = spritePosForRank(card.rank);
-
-    // (We can skip inner text entirely; keep content node only if you want a11y text)
-    // const c = document.createElement("div");
-    // c.className = "content";
-    // c.setAttribute("aria-label", `${RANKS[card.rank]} of ${card.suit}`);
-    // div.appendChild(c);
+    // Scale background to match current card size
+    div.style.backgroundSize = `calc(${COLS} * var(--card-w)) auto`;
   }else{
     // Choose which back to show (blue or red). Default red:
     div.classList.add("back-red");
@@ -114,35 +119,31 @@ function spritePosForRank(rank){
   return div;
 }
 
-  // replace your current renderPile with this version
 function renderPile(pileEl, cards, stacked = false){
   pileEl.innerHTML = "";
 
   const isStock = pileEl.id === "stock";
-  const yStepOpen = stacked ? 28 : 0;
-
-  // tiny fan for facedown cards in the stock pile; larger default elsewhere
-  const yStepFaceDown = isStock ? 0 : Math.max(10, yStepOpen * 0.6);
+  const { gap } = getCardDimensions();
+  
+  // Consistent card spacing for tableau columns
+  const yStepOpen = stacked ? Math.max(16, gap * 1.5) : 0;
+  const yStepFaceDown = stacked ? Math.max(16, gap * 1.5) : (isStock ? 0 : Math.max(16, gap * 1.5));
 
   cards.forEach((card, idx) => {
     const c = cardEl(card);
 
-    const top =
-      card.faceUp
-        ? idx * yStepFaceDown   // face-up piles (waste/tableau/foundation)
-        : idx * yStepFaceDown;              // face-down piles (stock)
+    // Use consistent spacing for both face-up and face-down cards in tableau
+    const top = stacked ? idx * yStepOpen : (card.faceUp ? idx * yStepOpen : idx * yStepFaceDown);
 
-    
-	 // Waste pile should not offset cards vertically
+    // Waste pile should not offset cards vertically
     if (pileEl.id === "waste") {
+      c.style.top = "0px";
+    } else if (pileEl.id.startsWith("foundation-")) {
       c.style.top = "0px";
     } else {
       c.style.top = `${top}px`;
     }
-	
-	if (pileEl.id === "foundation-0" || pileEl.id === "foundation-1" || pileEl.id === "foundation-2" || pileEl.id === "foundation-3" ) {
-		c.style.top = "0px";
-    }
+    
     c.style.left = "0px";
     c.style.zIndex = String(10 + idx);
     pileEl.appendChild(c);
@@ -161,7 +162,6 @@ function renderPile(pileEl, cards, stacked = false){
     state.foundations.forEach((f,i)=>renderPile(foundationEls[i], f));
     tableauEls.forEach((el,i)=>renderPile(el, state.tableau[i], true));
     movesEl.textContent=String(moves); scoreEl.textContent=String(score);
-    //drawThreeToggle.checked= false;
     attachInteractions();
     checkWin();
   }
@@ -207,25 +207,25 @@ function renderPile(pileEl, cards, stacked = false){
     let dragging=null, dragOrigin=null, offsetX=0, offsetY=0;
 
     function pickSequence(node){
-	  const id = node.dataset.id;
-	  const card = getCardById(id);
-	  if (!card || !card.faceUp) return null;
+      const id = node.dataset.id;
+      const card = getCardById(id);
+      if (!card || !card.faceUp) return null;
 
-	  const src = pileOf(card);
-	  if (src.type === "foundation") return [card];
+      const src = pileOf(card);
+      if (src.type === "foundation") return [card];
 
-	  const pile = src.pile;
-	  const start = pile.indexOf(card);
+      const pile = src.pile;
+      const start = pile.indexOf(card);
 
-	  // grow the sequence only while it remains a valid alternating run
-	  const seq = [pile[start]];
-	  for (let i = start; i < pile.length - 1; i++) {
-		const a = pile[i], b = pile[i+1];
-		if (!(a.faceUp && b.faceUp && a.color !== b.color && a.rank === b.rank + 1)) break;
-		seq.push(b);
-	  }
-	  return seq;
-	}
+      // grow the sequence only while it remains a valid alternating run
+      const seq = [pile[start]];
+      for (let i = start; i < pile.length - 1; i++) {
+        const a = pile[i], b = pile[i+1];
+        if (!(a.faceUp && b.faceUp && a.color !== b.color && a.rank === b.rank + 1)) break;
+        seq.push(b);
+      }
+      return seq;
+    }
 
     function onPointerDown(e){
       const node=e.target.closest(".card"); if(!node) return;
@@ -238,7 +238,16 @@ function renderPile(pileEl, cards, stacked = false){
 
     function onPointerMove(e){
       if(!dragging) return;
-      dragging.forEach((c,i)=>{ const n=document.querySelector(`.card[data-id="${c.id}"]`); const x=e.clientX-offsetX; const y=e.clientY-offsetY+i*28; n.style.position="fixed"; n.style.left=x+"px"; n.style.top=y+"px"; });
+      const { gap } = getCardDimensions();
+      const cardSpacing = Math.max(16, gap * 1.5);
+      dragging.forEach((c,i)=>{ 
+        const n=document.querySelector(`.card[data-id="${c.id}"]`); 
+        const x=e.clientX-offsetX; 
+        const y=e.clientY-offsetY+i*cardSpacing; 
+        n.style.position="fixed"; 
+        n.style.left=x+"px"; 
+        n.style.top=y+"px"; 
+      });
     }
 
     function dropTarget(e){
@@ -308,9 +317,8 @@ function renderPile(pileEl, cards, stacked = false){
 
     enableDrag();
   }
+
 // --- Fireworks overlay ---
-let __fxRunning = false;
-// --- Fireworks (runs until stopFireworks) ---
 let __fx = {
   running: false, canvas: null, ctx: null,
   particles: [], raf: 0, interval: 0, onResize: null
@@ -464,7 +472,7 @@ function showWinOverlay(){
   btn.onclick = () => {
     removeWinOverlay();
     stopFireworks();
-    deal(drawThreeToggle.checked); // same new game flow as the top button
+    deal(false);
   };
 
   panel.append(h1, sub, btn);
@@ -477,25 +485,21 @@ function removeWinOverlay(){
   if (o) o.remove();
 }
 
- 
-
-	function checkWin(){
-	  const complete = state.foundations.every(p => p.length===13);
-	  if(!complete) return;
-	  clearInterval(timerId);
-	  showFireworks(); // 🎆 instead of alert
-	  showWinOverlay();
-	}
-
+function checkWin(){
+  const complete = state.foundations.every(p => p.length===13);
+  if(!complete) return;
+  clearInterval(timerId);
+  showFireworks();
+  showWinOverlay();
+}
 
   // Buttons/keys
-
   undoBtn.onclick = () => undo();
   newGameBtn.onclick = () => {
-  removeWinOverlay();
-  stopFireworks();
-  deal(false);
-};
+    removeWinOverlay();
+    stopFireworks();
+    deal(false);
+  };
   hintBtn.onclick = () => {
     const topWaste=state.waste[state.waste.length-1];
     if(topWaste && (tryAutoToFoundation(topWaste) || tryAutoToTableau(topWaste))){ renderAll(); return; }
@@ -506,15 +510,23 @@ function removeWinOverlay(){
     }
     el("#stock").click();
   };
+  
+  // Re-render on window resize to adjust card spacing
+  window.addEventListener("resize", () => {
+    if (state) {
+      setTimeout(renderAll, 100); // Small delay to let CSS variables update
+    }
+  });
+  
   window.addEventListener("keydown", e=>{
     if(e.key==="n"||e.key==="N") newGameBtn.click();
     if(e.key==="u"||e.key==="U") undoBtn.click();
     if(e.key==="h"||e.key==="H") hintBtn.click();
     if(e.key===" ") el("#stock").click();
-	 if(e.key==="f"||e.key==="F") {
-		 showWinOverlay();
-		 showFireworks();
-	 } 
+    if(e.key==="f"||e.key==="F") {
+      showWinOverlay();
+      showFireworks();
+    } 
   });
 
   // boot

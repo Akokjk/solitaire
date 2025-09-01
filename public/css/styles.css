@@ -13,6 +13,25 @@
   --sheet-cols: 5;     /* 5 columns across in each sheet */
 }
 
+/* Mobile-first responsive card sizing */
+@media (max-width: 768px) or (max-height: 800px) {
+  :root {
+    --card-w: 60px;
+    --card-h: 84px;
+    --gap: 8px;
+    --radius: 8px;
+  }
+}
+
+@media (max-width: 480px) or (max-height: 700px) {
+  :root {
+    --card-w: 48px;
+    --card-h: 67px;
+    --gap: 6px;
+    --radius: 6px;
+  }
+}
+
 * {
   box-sizing: border-box;
 }
@@ -28,11 +47,46 @@ body {
   background: radial-gradient(circle at 50% 30%, #1a4d2e 0%, #145423 40%, #0d3d17 100%);
   color: var(--ink);
   font: 16px/1.45 system-ui, -apple-system, Segoe UI, Roboto, Ubuntu, 'Helvetica Neue', Arial;
+  min-height: 100vh; /* Ensure background covers full viewport height */
 }
 .site-header{
   position:sticky; top:0; z-index:30; display:flex; align-items:center; justify-content:space-between;
   padding:10px 14px; background: linear-gradient(180deg, rgba(10,16,24,.9), rgba(10,16,24,.5));
   border-bottom:1px solid rgba(255,255,255,.06); backdrop-filter: blur(6px);
+}
+
+/* Mobile header adjustments */
+@media (max-width: 768px) {
+  .site-header {
+    padding: 6px 8px;
+    flex-wrap: wrap;
+    gap: 8px;
+  }
+  
+  .header-stats {
+    order: 3;
+    width: 100%;
+    justify-content: center;
+    gap: 6px;
+  }
+  
+  .header-stats .stat {
+    padding: 2px 6px;
+    font-size: 12px;
+  }
+  
+  .actions {
+    gap: 4px;
+  }
+  
+  .actions button {
+    padding: 6px 8px;
+    font-size: 12px;
+  }
+  
+  .brand .title {
+    font-size: 16px;
+  }
 }
 .brand{display:flex; align-items:center; gap:10px; font-weight:700}
 .logo{font-size:20px} .title{font-size:18px; letter-spacing:.6px}
@@ -48,6 +102,21 @@ body {
   max-width: 1300px;
   margin: 0 auto;
   padding: 16px;
+}
+
+/* Mobile game root adjustments */
+@media (max-width: 768px) {
+  .game-root {
+    padding: 8px 4px;
+    max-width: 100vw;
+    overflow-x: auto;
+  }
+}
+
+@media (max-width: 480px) {
+  .game-root {
+    padding: 4px 2px;
+  }
 }
 .sidebar{display:flex; flex-direction:column; gap:var(--gap)}
 .header-stats {
@@ -75,14 +144,49 @@ body {
 	width: fit-content;
 	justify-self: anchor-center;
 }
+
+/* Mobile table adjustments */
+@media (max-width: 768px) {
+  .table {
+    padding: var(--gap);
+    margin: 0 auto;
+    width: 100%;
+    max-width: calc(7 * (var(--card-w) + var(--gap)) + var(--gap));
+    box-sizing: border-box;
+  }
+}
+
+@media (max-width: 480px) {
+  .table {
+    padding: var(--gap);
+    max-width: calc(100vw - 8px);
+  }
+}
 .row{
   display:grid;
   grid-template-columns: repeat(7, minmax(80px, 1fr)); /* 7 even columns everywhere */
   gap: var(--gap);
   min-height:110px;
 }
+
+/* Mobile row adjustments */
+@media (max-width: 768px) {
+  .row {
+    grid-template-columns: repeat(7, var(--card-w));
+    min-height: var(--card-h);
+    gap: var(--gap);
+  }
+}
+
 .row.tableau-row {
   max-width:var(--card-w);
+}
+
+/* Mobile tableau row adjustments */
+@media (max-width: 768px) {
+  .row.tableau-row {
+    max-width: none;
+  }
 }
 
 .top-row{ 
@@ -99,7 +203,7 @@ body {
   border-radius:10px;
   background: repeating-linear-gradient(135deg, #0c1628, #0c1628 10px, #0a1322 10px, #0a1322 20px);
   border:1px dashed rgba(255,255,255,.12);
-  overflow: hidden;              /* ✅ keep tall stacks inside the pile box */
+  overflow: hidden;              /* âœ… keep tall stacks inside the pile box */
 }
 
 /* Make top-row piles exactly card height for clean alignment */
@@ -124,6 +228,23 @@ body {
 	min-height:420px; 
 	min-width: var(--card-w);
 	max-width: var(--card-w);
+}
+
+/* Mobile tableau pile adjustments */
+@media (max-width: 768px) {
+  .pile.tableau {
+    height: calc(60vh - 120px); /* Account for header space */
+    min-height: 200px;
+    max-height: 300px;
+  }
+}
+
+@media (max-width: 480px) {
+  .pile.tableau {
+    height: calc(55vh - 100px);
+    min-height: 180px;
+    max-height: 250px;
+  }
 }
 
 .card{
@@ -154,10 +275,121 @@ body {
   color:var(--ink);
 }
 
-/* We won’t render rank/suit text when using sprites; hide if still present */
+/* We wonâ€™t render rank/suit text when using sprites; hide if still present */
 .card.faceup .content{ display:none; }
 
 .placeholder{position:absolute; inset:0; border-radius:10px; outline:2px dashed rgba(255,255,255,.18); outline-offset:-8px}
+
+/* History Section Styles - Matches existing design system */
+.solitaire-history,
+.solitaire-rules {
+  max-width: 1300px;
+  margin: var(--gap) auto;
+  padding: 0 16px;
+}
+
+.history-toggle button,
+.rules-toggle button {
+  background: var(--panel);
+  color: var(--ink);
+  border: 1px solid rgba(255,255,255,.08);
+  border-radius: var(--radius);
+  padding: var(--gap);
+  width: 100%;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  cursor: pointer;
+  box-shadow: var(--shadow);
+  font-family: inherit;
+  transition: all 0.2s ease;
+}
+
+.history-toggle button:hover,
+.rules-toggle button:hover {
+  border-color: var(--accent);
+  background: linear-gradient(180deg, #0e1624, #0b1220);
+}
+
+.toggle-icon {
+  font-size: 14px;
+  transition: transform 0.2s ease;
+  color: var(--muted);
+}
+
+.history-toggle button[aria-expanded="true"] .toggle-icon,
+.rules-toggle button[aria-expanded="true"] .toggle-icon {
+  transform: rotate(180deg);
+}
+
+.history-toggle h2,
+.rules-toggle h2 {
+  margin: 0;
+  font-size: 18px;
+  color: var(--ink);
+  font-weight: 700;
+  letter-spacing: 0.6px;
+}
+
+.history-content,
+.rules-content {
+  background: linear-gradient(180deg, rgba(14,22,36,.85), rgba(11,18,32,.85));
+  border: 1px solid rgba(255,255,255,.06);
+  border-top: none;
+  border-radius: 0 0 var(--radius) var(--radius);
+  box-shadow: var(--shadow);
+  overflow: hidden;
+  backdrop-filter: blur(8px);
+}
+
+.history-text,
+.rules-text {
+  padding: var(--gap);
+  line-height: 1.45;
+  color: var(--ink);
+}
+
+.history-text p,
+.rules-text p {
+  margin-bottom: 1rem;
+}
+
+.history-text p:last-child,
+.rules-text p:last-child {
+  margin-bottom: 0;
+}
+
+.history-text strong,
+.rules-text strong {
+  color: var(--accent);
+  font-weight: 600;
+}
+
+.rules-text h3 {
+  color: var(--accent-2);
+  font-size: 16px;
+  font-weight: 700;
+  margin: 1.5rem 0 0.75rem 0;
+  letter-spacing: 0.3px;
+}
+
+.rules-text h3:first-child {
+  margin-top: 0;
+}
+
+.rules-text ul {
+  margin: 1rem 0;
+  padding-left: 1.5rem;
+}
+
+.rules-text li {
+  margin-bottom: 0.75rem;
+  color: var(--ink);
+}
+
+.rules-text li:last-child {
+  margin-bottom: 0;
+}
 
 .site-footer{display:flex; align-items:center; justify-content:space-between; max-width:1300px; margin:16px auto; padding:8px 12px; color:var(--muted)}
 
@@ -165,4 +397,84 @@ body {
   .game-root{grid-template-columns: 1fr}
   .sidebar{order:2}
   .table{order:1}
+  
+  .solitaire-history,
+  .solitaire-rules {
+    margin: 8px auto;
+    padding: 0 8px;
+  }
+  
+  .history-toggle h2,
+  .rules-toggle h2 {
+    font-size: 16px;
+  }
+  
+  .history-text,
+  .rules-text {
+    padding: 10px;
+    font-size: 15px;
+  }
+  
+  .rules-text h3 {
+    font-size: 15px;
+  }
+}
+
+/* Additional mobile optimizations for very small screens */
+@media (max-width: 480px) {
+  .solitaire-history,
+  .solitaire-rules {
+    margin: 4px auto;
+    padding: 0 4px;
+  }
+  
+  .history-toggle button,
+  .rules-toggle button {
+    padding: 8px;
+  }
+  
+  .history-toggle h2,
+  .rules-toggle h2 {
+    font-size: 14px;
+  }
+  
+  .history-text,
+  .rules-text {
+    padding: 8px;
+    font-size: 14px;
+  }
+  
+  .rules-text h3 {
+    font-size: 14px;
+  }
+  
+  .rules-text ul {
+    padding-left: 1rem;
+  }
+}
+
+/* Landscape mobile adjustments */
+@media (max-height: 600px) and (orientation: landscape) {
+  .site-header {
+    padding: 4px 8px;
+  }
+  
+  .header-stats .stat {
+    padding: 2px 4px;
+    font-size: 11px;
+  }
+  
+  .actions button {
+    padding: 4px 6px;
+    font-size: 11px;
+  }
+  
+  .pile.tableau {
+    height: calc(85vh - 80px);
+    min-height: 120px;
+  }
+  
+  .game-root {
+    padding: 4px 2px;
+  }
 }
